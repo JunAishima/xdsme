@@ -40,6 +40,7 @@ from xupy import XParam, xdsInp2Param, opWriteCl, \
 import XIO
 
 PROGNAME = os.path.split(sys.argv[0])[1]
+DIRNAME_PREFIX = "xdsme_"
 USAGE = """
    Running XDS automatically...
 
@@ -118,7 +119,8 @@ USAGE = """
 
     -p,  --project NAME
          Set the project name. The default is the prefix taken from
-         image names. The working directory will be: xds_process_"project"
+         image names. If the project is set, the working directory will be: "project"
+         If the project is not set, the working directory will be: %s"project"
 
     -r,  --high-resolution
          Set a high resolution cutoff. Default is 0 (no cutoff).
@@ -185,7 +187,7 @@ USAGE = """
          Path for the directory containing the executables, if different from
          or not in the default path.
 
-""" % (PROGNAME, [filetype for filetype in XIO.FILETYPES])
+""" % (PROGNAME, DIRNAME_PREFIX, [filetype for filetype in XIO.FILETYPES])
 
 FMT_HELLO = """
     Diffraction Setup Parameters:\n
@@ -1576,7 +1578,6 @@ if __name__ == "__main__":
         print USAGE
         sys.exit(2)
 
-    DIRNAME_PREFIX = "xdsme_"
     NUMBER_OF_PROCESSORS = min(16, get_number_of_processors())
     # Use a maximum of 16 proc. by job. Change it if you whant another limit.
     WARNING = ""
@@ -1735,7 +1736,7 @@ if __name__ == "__main__":
     if not PROJECT:
         newDir = DIRNAME_PREFIX + _coll.prefix
     else:
-        newDir = DIRNAME_PREFIX + PROJECT
+        newDir = PROJECT
     #
     _linkimages = False
     if not _coll.isContinuous(inputf):
