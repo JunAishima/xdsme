@@ -12,8 +12,12 @@ from xml.dom import minidom
 
 def is_pointless_installed():
     tmpfile = "/tmp/xdsme_pointless.%s.xml" % os.getpid()
-    cmline = "rm -f %s; pointless XMLOUT %s > /dev/null 2>&1"
-    os.system(cmline % (tmpfile, tmpfile))
+    cmline = "rm -f %s"
+    cmline2= ["pointless",'XMLOUT', tmpfile]
+    os.system(cmline % tmpfile)
+    import subprocess
+    process = subprocess.Popen(cmline2, stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    out, err = process.communicate(input='\n')
     if os.path.isfile(tmpfile):
         installed = True
     else:
