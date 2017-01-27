@@ -941,10 +941,16 @@ class XDS:
             self.inpParam["STRONG_PIXEL"] = 4.5
         else:
             frames_per_colspot_sequence = int(round(3.2/dPhi, 0))
+          
         if "weak" in self.mode:
             self.inpParam["STRONG_PIXEL"] = 4.5
             self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"] -= 1
             frames_per_colspot_sequence = int(round(12.8/dPhi, 0))
+            if EIGER:
+                self.inpParam["STRONG_PIXEL"] = 2.5
+        elif EIGER:
+            self.inpParam["STRONG_PIXEL"] = 3.0
+            self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"] = 3
         # Selecting spot range(s),
         # self.inpParam["SPOT_RANGE"] is set to Collect.imageRanges by the
         # xds export function XIO
@@ -1563,7 +1569,8 @@ if __name__ == "__main__":
                 "optimize",
                 "O1","O2","O3","O",
                 "wavelength=",
-                "type="
+                "type=",
+                "eiger",
                 "slow", "weak", "brute"]
 
     if len(sys.argv) == 1:
@@ -1612,6 +1619,7 @@ if __name__ == "__main__":
     OPTIMIZE = 0
     TYPE = None
     INVERT = False
+    EIGER = False
     XDS_PATH = ""
 
     for o, a in opts:
@@ -1716,6 +1724,8 @@ if __name__ == "__main__":
             WEAK = True
         if o in ("--invert"):
             INVERT = True
+        if o in ("--eiger"):
+            EIGER = True
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
