@@ -1126,8 +1126,9 @@ class XDS:
            self.inpParam["DELPHI"] = 20.
         if XDS_INPUT:
             self.inpParam.mix(xdsInp2Param(inp_str=XDS_INPUT))
-        self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = NUMBER_OF_PROCESSORS
-        self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = 1
+        processors = int(math.ceil(math.sqrt(NUMBER_OF_PROCESSORS) / 2.) * 2) # even number
+        self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = processors
+        self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = processors
         if ("slow" in self.mode) or BRUTE:
             self.inpParam["NUMBER_OF_PROFILE_GRID_POINTS_ALONG_ALPHA_BETA"] = 13
             self.inpParam["NUMBER_OF_PROFILE_GRID_POINTS_ALONG_GAMMA"] = 13
