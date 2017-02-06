@@ -911,6 +911,8 @@ class XDS:
             bkgr =  i1, i1+40
         elif SLOW or WEAK:
             bkgr =  i1, min(i2, min(i1+15, i1+int(7./dPhi)))
+        elif EIGER: # for Eiger, 80 images (assuming 0.1 deg or less per image) or 5 degrees
+            bkgr = i1, min(i2, min(i1+80, i1+int(5./dPhi))
         else:
             bkgr =  i1, min(i2, min(i1+7, i1+int(3./dPhi)))
         self.inpParam["BACKGROUND_RANGE"] = bkgr
