@@ -951,6 +951,7 @@ class XDS:
         elif EIGER:
             self.inpParam["STRONG_PIXEL"] = 3.0
             self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"] = 3
+            self.inpParam["SEPMIN"] = 4
         # Selecting spot range(s),
         # self.inpParam["SPOT_RANGE"] is set to Collect.imageRanges by the
         # xds export function XIO
@@ -1874,6 +1875,8 @@ if __name__ == "__main__":
     #print newPar
     # Setting DELPHI as a fct of OSCILLATION_RANGE, MODE and NPROC
     _MIN_DELPHI = 5. # in degree
+    if EIGER:
+        _MIN_DELPHI = 1.
     _DELPHI = NUMBER_OF_PROCESSORS * newrun.inpParam["OSCILLATION_RANGE"]
     while _DELPHI < _MIN_DELPHI:
         _DELPHI *= 2
