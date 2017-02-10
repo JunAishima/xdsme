@@ -1881,7 +1881,7 @@ if __name__ == "__main__":
     while _DELPHI < _MIN_DELPHI:
         _DELPHI *= 2
     if EIGER:
-        _DELPHI = 1.
+        _DELPHI = 4.
     newrun.inpParam["DELPHI"] = _DELPHI
 
     if SLOW:
