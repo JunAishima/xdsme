@@ -1877,11 +1877,11 @@ if __name__ == "__main__":
     #print newPar
     # Setting DELPHI as a fct of OSCILLATION_RANGE, MODE and NPROC
     _MIN_DELPHI = 5. # in degree
-    if EIGER:
-        _MIN_DELPHI = 1.
     _DELPHI = NUMBER_OF_PROCESSORS * newrun.inpParam["OSCILLATION_RANGE"]
     while _DELPHI < _MIN_DELPHI:
         _DELPHI *= 2
+    if EIGER:
+        _DELPHI = 1.
     newrun.inpParam["DELPHI"] = _DELPHI
 
     if SLOW:
