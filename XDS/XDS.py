@@ -911,6 +911,8 @@ class XDS:
             bkgr =  i1, i1+40
         elif SLOW or WEAK:
             bkgr =  i1, min(i2, min(i1+15, i1+int(7./dPhi)))
+        elif EIGER: # for Eiger, 80 images (assuming 0.1 deg or less per image) or 5 degrees
+            bkgr = i1, min(i2, min(i1+80, i1+int(5./dPhi)))
         else:
             bkgr =  i1, min(i2, min(i1+7, i1+int(3./dPhi)))
         self.inpParam["BACKGROUND_RANGE"] = bkgr
@@ -941,10 +943,17 @@ class XDS:
             self.inpParam["STRONG_PIXEL"] = 4.5
         else:
             frames_per_colspot_sequence = int(round(3.2/dPhi, 0))
+          
         if "weak" in self.mode:
             self.inpParam["STRONG_PIXEL"] = 4.5
             self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"] -= 1
             frames_per_colspot_sequence = int(round(12.8/dPhi, 0))
+            if EIGER:
+                self.inpParam["STRONG_PIXEL"] = 2.5
+        elif EIGER:
+            self.inpParam["STRONG_PIXEL"] = 3.0
+            self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"] = 3
+            self.inpParam["SEPMIN"] = 4
         # Selecting spot range(s),
         # self.inpParam["SPOT_RANGE"] is set to Collect.imageRanges by the
         # xds export function XIO
@@ -1563,7 +1572,8 @@ if __name__ == "__main__":
                 "optimize",
                 "O1","O2","O3","O",
                 "wavelength=",
-                "type="
+                "type=",
+                "eiger",
                 "slow", "weak", "brute"]
 
     if len(sys.argv) == 1:
@@ -1612,6 +1622,7 @@ if __name__ == "__main__":
     OPTIMIZE = 0
     TYPE = None
     INVERT = False
+    EIGER = False
     XDS_PATH = ""
 
     for o, a in opts:
@@ -1716,6 +1727,8 @@ if __name__ == "__main__":
             WEAK = True
         if o == "--invert":
             INVERT = True
+        if o in ("--eiger"):
+            EIGER = True
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
@@ -1867,6 +1880,8 @@ if __name__ == "__main__":
     _DELPHI = NUMBER_OF_PROCESSORS * newrun.inpParam["OSCILLATION_RANGE"]
     while _DELPHI < _MIN_DELPHI:
         _DELPHI *= 2
+    if EIGER:
+        _DELPHI = 4.
     newrun.inpParam["DELPHI"] = _DELPHI
 
     if SLOW:
