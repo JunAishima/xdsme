@@ -99,6 +99,9 @@ USAGE = """
          Exclude resolution ranges where ice-rings occurs (3.897, 3.669,
          3.441, 2.671, 2.249, 2.249, 1.948, 1.918, 1.883, 1.721 A).
 
+    -l, --library
+         used with --eiger, the library path for XDS (keyword LIB=)
+
     -L, --last-frame
          Specify the last frame to be used in the DATA_RANGE (see also -F).
          This can be useful in case of radiation damage.
@@ -1545,7 +1548,7 @@ if __name__ == "__main__":
 
     import getopt
 
-    short_opt =  "123456aAbBc:d:E:f:F:i:IL:O:M:n:p:s:Sr:R:t:x:y:vw:WSF"
+    short_opt =  "123456aAbBc:d:E:f:F:i:Il:L:O:M:n:p:s:Sr:R:t:x:y:vw:WSF"
     long_opt = ["anomal",
                 "Anomal",
                 "beam-x=",
@@ -1576,6 +1579,7 @@ if __name__ == "__main__":
                 "wavelength=",
                 "type=",
                 "eiger",
+                "library=",
                 "slow", "weak", "brute"]
 
     if len(sys.argv) == 1:
@@ -1625,6 +1629,7 @@ if __name__ == "__main__":
     TYPE = None
     INVERT = False
     EIGER = False
+    LIBRARY = ""
     XDS_PATH = ""
 
     for o, a in opts:
@@ -1731,10 +1736,17 @@ if __name__ == "__main__":
             INVERT = True
         if o in ("--eiger"):
             EIGER = True
+        if o in ("-l", "--library"):
+            if EIGER:
+                if os.path.exists(a):
+                    LIBRARY = a
+                else:
+                    print "Library path does not exist"
+            else:
+                print "Library is not applicable for non-Eiger detectors for now."
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
-
     if not inputf:
         print "\nFATAL ERROR. No image file specified.\n"
         sys.exit(2)
@@ -1866,6 +1878,9 @@ if __name__ == "__main__":
         collect.setDirectory(newrun.link_name_to_image)
 
     newPar["NAME_TEMPLATE_OF_DATA_FRAMES"] = collect.xdsTemplate
+
+    if LIBRARY:
+        newPar["LIB"] = LIBRARY
 
     if "SPECIFIC_KEYWORDS" in newPar.keys():
         specific_keys = newPar["SPECIFIC_KEYWORDS"]
