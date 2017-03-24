@@ -186,6 +186,8 @@ USAGE = """
          Path for the directory containing the executables, if different from
          or not in the default path.
 
+    --eiger
+         Use Eiger-specific options
 """ % (PROGNAME, DIRNAME_PREFIX, [filetype for filetype in XIO.FILETYPES])
 
 FMT_HELLO = """
