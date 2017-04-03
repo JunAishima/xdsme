@@ -949,7 +949,7 @@ class XDS:
         else:
             frames_per_colspot_sequence = int(round(3.2/dPhi, 0))
 
-        if EIGER and FRAMES_PER_COLSPOT_SEQUENCE / NUMBER_OF_PROCESSORS < 1
+        if EIGER and FRAMES_PER_COLSPOT_SEQUENCE / NUMBER_OF_PROCESSORS < 1:
             self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = FRAMES_PER_COLSPOT_SEQUENCE #prevent number of jobs from getting too big
             # for reference, see: http://strucbio.biologie.uni-konstanz.de/xdswiki/index.php/Problems#IDXREF_produces_too_long_axes
           
