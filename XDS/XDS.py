@@ -191,6 +191,10 @@ USAGE = """
 
     --eiger
          Use Eiger-specific options
+
+    --index_refine
+         Allow position to be refined during indexing - recommended for chemical crystallography
+
 """ % (PROGNAME, DIRNAME_PREFIX, [filetype for filetype in XIO.FILETYPES])
 
 FMT_HELLO = """
@@ -1584,6 +1588,7 @@ if __name__ == "__main__":
                 "type=",
                 "eiger",
                 "library=",
+                "index_refine",
                 "slow", "weak", "brute"]
 
     if len(sys.argv) == 1:
@@ -1633,6 +1638,7 @@ if __name__ == "__main__":
     TYPE = None
     INVERT = False
     EIGER = False
+    INDEX_REFINE = False
     LIBRARY = ""
     XDS_PATH = ""
 
@@ -1748,6 +1754,8 @@ if __name__ == "__main__":
                     print "Library path does not exist"
             else:
                 print "Library is not applicable for non-Eiger detectors for now."
+        if o == '--index_refine':
+            INDEX_REFINE = True
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
@@ -1885,6 +1893,9 @@ if __name__ == "__main__":
 
     if LIBRARY:
         newPar["LIB"] = LIBRARY
+
+    if INDEX_REFINE:
+        newPar['REFINE_IDXREF'] = 'BEAM AXIS ORIENTATION CELL POSITION'
 
     if "SPECIFIC_KEYWORDS" in newPar.keys():
         specific_keys = newPar["SPECIFIC_KEYWORDS"]
