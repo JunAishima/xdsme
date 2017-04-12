@@ -997,7 +997,7 @@ class XDS:
         print _rs[:-1] + "\n"
 
         res = XDSLogParser("COLSPOT.LP", run_dir=self.run_dir, verbose=1)
-        while res.results["spot_number"] < MIN_SPOT_NUMBER and _trial < 4:
+        while res.results["spot_number"] < MIN_SPOT_NUMBER and _trial < 4 and self.inpParam["STRONG_PIXEL"] >= 2.:
             _trial += 1
             min_pixels = int(self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"])
             self.inpParam["MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT"] = max(min_pixels-1, 1)
