@@ -110,7 +110,7 @@ XDS_DETECTOR_DICT = {
     "mar":      0,
     "mar555":   0,
     "marccd":   0,
-    "adsc":     0,
+    "adsc":     0.01,
     "raxis":    0,
     "minicbf":  0.32,
     "hdf5dec":  0.45,
