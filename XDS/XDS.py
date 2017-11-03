@@ -195,6 +195,14 @@ USAGE = """
     --index_refine
          Allow position to be refined during indexing - recommended for chemical crystallography
 
+    --force_processors_jobs
+         Force numbers of processors and jobs, overriding -n. For integration, the values
+         will be used instead of square root of processors alone.
+    --jobs
+         Number of jobs, used with --force_processors_jobs
+    --processors
+         Number of processors, used with --force_processors_jobs
+
 """ % (PROGNAME, DIRNAME_PREFIX, [filetype for filetype in XIO.FILETYPES])
 
 FMT_HELLO = """
@@ -935,7 +943,14 @@ class XDS:
             self.inpParam.mix(xdsInp2Param(inp_str=XDS_INPUT))
         self.inpParam["JOB"] = "COLSPOT",
         self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = 1
-        self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = NUMBER_OF_PROCESSORS
+        if FORCE_PROCESSORS_JOBS:
+            try:
+                self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = FORCED_NUMBER_OF_JOBS
+            except NameError:
+                print 'if --force_processors_jobs is used, --jobs must be used to set number of jobs!'
+                sys.exit(1)
+        else:
+            self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = NUMBER_OF_PROCESSORS
         _trial = 0
 
         # DEFAULT=3.2 deg., SLOW=6.4 deg., FAST=1.6 deg.
@@ -1153,8 +1168,16 @@ class XDS:
             self.inpParam.mix(xdsInp2Param(inp_str=XDS_INPUT))
         import math
         processors = int(math.ceil(math.sqrt(NUMBER_OF_PROCESSORS) / 2.) * 2) # even number
-        self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = processors
-        self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = processors
+        if FORCE_PROCESSORS_JOBS:
+            try:
+                self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = FORCED_NUMBER_OF_PROCESSORS
+                self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = FORCED_NUMBER_OF_JOBS
+            except NameError:
+                print 'if --force_processors_jobs is used, --jobs and --processors must be set to number of jobs and processors, respectively!'
+                sys.exit(1)
+        else:
+            self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = processors
+            self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = processors
         if ("slow" in self.mode) or BRUTE:
             self.inpParam["NUMBER_OF_PROFILE_GRID_POINTS_ALONG_ALPHA_BETA"] = 13
             self.inpParam["NUMBER_OF_PROFILE_GRID_POINTS_ALONG_GAMMA"] = 13
@@ -1592,6 +1615,8 @@ if __name__ == "__main__":
                 "eiger",
                 "library=",
                 "index_refine",
+                "force_processors_jobs",
+                "jobs=", "processors=",
                 "slow", "weak", "brute"]
 
     if len(sys.argv) == 1:
@@ -1644,6 +1669,7 @@ if __name__ == "__main__":
     INDEX_REFINE = False
     LIBRARY = ""
     XDS_PATH = ""
+    FORCE_PROCESSORS_JOBS = False
 
     for o, a in opts:
         if o == "-v":
@@ -1759,9 +1785,22 @@ if __name__ == "__main__":
                 print "Library is not applicable for non-Eiger detectors for now."
         if o == '--index_refine':
             INDEX_REFINE = True
+        if o == '--force_processors_jobs':
+            FORCE_PROCESSORS_JOBS = True
+        if o == '--jobs':
+            FORCED_NUMBER_OF_JOBS = int(a)
+        if o == '--processors':
+            FORCED_NUMBER_OF_PROCESSORS = int(a)
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
+    if FORCE_PROCESSORS_JOBS:
+        try:
+            FORCED_NUMBER_OF_JOBS
+            NUMBER_OF_PROCESSORS = FORCED_NUMBER_OF_PROCESSORS
+        except NameError:
+            print 'if --force_processors_jobs is used, both --jobs and --processors must be defined'
+            sys.exit(1)
     if not inputf:
         print "\nFATAL ERROR. No image file specified.\n"
         sys.exit(2)
