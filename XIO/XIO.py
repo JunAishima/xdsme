@@ -67,8 +67,9 @@ CBF = "cbf"
 MINICBF = "minicbf"
 RAXIS = "raxis"
 OXFORD = "oxford"
+MSCPILATUS = "mscpilatus"
 UNKNOWN = "unknown"
-FILETYPES = {MAR555, MAR, HDF5DEC, ADSC, MSCCCD, MARCCD, CBF, MINICBF, RAXIS, OXFORD, UNKNOWN}
+FILETYPES = {MAR555, MAR, HDF5DEC, ADSC, MSCCCD, MARCCD, CBF, MINICBF, RAXIS, OXFORD, MSCPILATUS, UNKNOWN}
 
 def list_of_string(arg):
     """"Return True if all the component of the list are of string type."""
@@ -290,7 +291,7 @@ class Image:
         # Test to identify Pilatus-MSC header 
         elif  self.rawHead[:15] == "{\nHEADER_BYTES=" and \
                 self.rawHead.count(";\nDETECTOR_TYPE=Pilatus"):
-            self.type = "mscpilatus"
+            self.type = MSCPILATUS
             self.intCompression = "CBF"
             return self.type
 
