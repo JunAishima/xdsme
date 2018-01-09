@@ -4,13 +4,14 @@
     See http://xds.mpimf-heidelberg.mpg.de/html_doc/xds_prepare.html
 """
 
-__version__ = "0.4.1"
+__version__ = "0.4.4"
 __author__ = "Pierre Legrand (pierre.legrand@synchrotron-soleil.fr)"
-__date__ = "27-11-2013"
-__copyright__ = "Copyright (c) 2007-2013 Pierre Legrand"
+__date__ = "22-11-2017"
+__copyright__ = "Copyright (c) 2007-2017 Pierre Legrand"
 __license__ = "New BSD, http://www.opensource.org/licenses/bsd-license.php"
 
 import time
+import os
 
 from pycgtypes import vec3
 from pycgtypes import mat3
@@ -19,6 +20,13 @@ EX, EY, EZ = vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)
 V3FMT = "%9.6f %9.6f %9.6f"
 PI = 3.1415926535897931
 D2R = PI/180.
+
+def set_detplugin_lib(dettype):
+    """Find out if we can set the LIB keyword"""
+    if dettype == "hdf5dec" and "XDS_LIB_HDF5DEC" in os.environ:
+        return os.environ["XDS_LIB_HDF5DEC"]
+    else:
+        return None
 
 def det_dist(distance, dettype):
     "Return the disance with the proper sign."
@@ -31,7 +39,7 @@ def det_spindle(dettype):
 
 def polarization(wavelength):
     "Guess the polarization fraction from the wavelength."
-    if 1.5415 < wavelength < 1.5421:
+    if 1.5417 < wavelength < 1.5420:
         return 0.5
     else:
         return 0.99
@@ -75,6 +83,7 @@ XDS_DETECTOR_DICT = {
     "minicbf":   "PILATUS",
     "hdf5dec":   "EIGER",
     "mscccd":    "SATURN",
+    "mscpilatus":"PILATUS",
   },
   "overload":{
     "mar":       130000,
@@ -85,52 +94,58 @@ XDS_DETECTOR_DICT = {
     "minicbf":  1048500,
     "hdf5dec":  1000000,
     "mscccd":   1000000,
+    "mscpilatus":1048500,
   },
   "minval":{
-    "mar":      0,
-    "mar555":   0,
-    "marccd":   1,
-    "adsc":     1,
-    "raxis":    0,
-    "minicbf":  0,
-    "hdf5dec":  0,
-    "mscccd":   1,
+    "mar":        0,
+    "mar555":     0,
+    "marccd":     1,
+    "adsc":       1,
+    "raxis":      0,
+    "minicbf":    0,
+    "hdf5dec":    0,
+    "mscccd":     1,
+    "mscpilatus": 0,
   },
   "min_number_of_pixels":{
-    "mar":      8,
-    "mar555":   4,
-    "marccd":   8,
-    "adsc":     8,
-    "raxis":    8,
-    "minicbf":  3,
-    "hdf5dec":  4,
-    "mscccd":   8,
+    "mar":        8,
+    "mar555":     4,
+    "marccd":     8,
+    "adsc":       8,
+    "raxis":      8,
+    "minicbf":    3,
+    "hdf5dec":    4,
+    "mscccd":     8,
+    "mscpilatus": 3,
   },
   "sensor_thickness":{
-    "mar":      0,
-    "mar555":   0,
-    "marccd":   0,
-    "adsc":     0.01,
-    "raxis":    0,
-    "minicbf":  0.32,
-    "hdf5dec":  0.45,
-    "mscccd":   0,
+    "mar":       0,
+    "mar555":    0,
+    "marccd":    0,
+    "adsc":      0.01,
+    "raxis":     0,
+    "minicbf":   0.32,
+    "hdf5dec":   0.45,
+    "mscpilatus":0.45,
+    "mscccd":    0,
   },
   "orient":{ # X_det, Y_det, distanceSign, spindle_axis, twoThetaAxis, beamdef
-    "mar":      ( EX, EY,  1,  EX, -EX, "XY"),
-    "mar555":   ( EX, EY,  1,  EX, -EX, "XY"),
-    "marccd":   ( EX, EY,  1,  EX, -EX, "YX"),
-    "adsc":     ( EX, EY,  1,  EX, -EX, "YX"),
-    "raxis":    ( EX, EY,  1,  EY,  EY, "XY"),
-    "minicbf":  ( EX, EY,  1,  EX,  EX, "XY"),
-    "mscccd":   (-EX, EY, -1,  EY,  EY, "XY"),
-    "hdf5dec":  ( EX, EY,  1,  EX,  EX, "XY"),
+    "mar":       ( EX, EY,  1,  EX, -EX, "XY"),
+    "mar555":    ( EX, EY,  1,  EX, -EX, "XY"),
+    "marccd":    ( EX, EY,  1,  EX, -EX, "YX"),
+    "adsc":      ( EX, EY,  1,  EX, -EX, "YX"),
+    "raxis":     ( EX, EY,  1,  EY,  EY, "XY"),
+    "minicbf":   ( EX, EY,  1,  EX,  EX, "XY"),
+    "mscccd":    (-EX, EY, -1,  EY,  EY, "XY"),
+    "hdf5dec":   ( EX, EY,  1,  EX,  EX, "XY"),
+    "mscpilatus":( EX, EY,  1, -EY,  EX, "XY"),
   }
 }
 
 SPECIFIC_SUPPLEMENTARY_KEYWORDS = {
   "PILATUS 6M": """!SPECIFIC KEYWORDS FOR PILATUS 6M
   
+ GAIN= 1.0
  VALUE_RANGE_FOR_TRUSTED_DETECTOR_PIXELS= 5500 30000
   
  UNTRUSTED_RECTANGLE= 487  495     0 2528
@@ -155,11 +170,11 @@ SPECIFIC_SUPPLEMENTARY_KEYWORDS = {
 ! Y-GEO_CORR= ../hole_mask/y_geo_corr.cbf   
 
  \n""",
-"457":"""
+ "457":"""
 ! AS MX1 Reverse Phi
 ROTATION_AXIS= -1.0 0.0 0.0
 \n""",
-"928":"""
+ "928":"""
 ! AS MX2 Reverse Phi
 ROTATION_AXIS= -1.0 0.0 0.0
 \n"""
@@ -256,7 +271,7 @@ HTD = {
 'DIRECTION_OF_DETECTOR_X-AXIS':(['TwoTheta','ImageType'], det_axis_x),
 'DIRECTION_OF_DETECTOR_Y-AXIS':(['TwoTheta','ImageType'], det_axis_y),
 '_HIGH_RESOL_LIMIT':(['EdgeResolution'], lambda x: round(x,2)),
-'SENSOR_THICKNESS':(['SensorThickness'], float),
+'SENSOR_THICKNESS':(['SensorThickness'], float)
 }
 
 #     Collect Translator Dictionary.
@@ -281,4 +296,5 @@ CTD = {
 'MINIMUM_NUMBER_OF_PIXELS_IN_A_SPOT':(['imageType'], lambda x: \
                                XDS_DETECTOR_DICT["min_number_of_pixels"][x]),
 'OVERLOAD':(['imageType'], lambda x: XDS_DETECTOR_DICT["overload"][x]),
+'_LIB':(['imageType'], set_detplugin_lib)
 }

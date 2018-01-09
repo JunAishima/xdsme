@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.8.8"
+__version__ = "0.8.11"
 __author__ = "Pierre Legrand (pierre.legrand@synchrotron-soleil.fr)"
-__date__ = "20-02-2016"
-__copyright__ = "Copyright (c) 2006-2015 Pierre Legrand"
+__date__ = "03-02-2017"
+__copyright__ = "Copyright (c) 2006-2017 Pierre Legrand"
 __license__ = "New BSD http://www.opensource.org/licenses/bsd-license.php"
 
 # Environemantal variable XDS_PATH, if set, defines the place where the xds
@@ -23,8 +23,8 @@ atom_names = ['Ag', 'Al', 'Ar', 'As', 'Au', 'B', 'Ba', 'Be', 'Bi', 'Br',
 'Tb', 'Tc', 'Te', 'Th', 'Ti', 'Tl', 'Tm', 'U', 'V', 'W', 'Xe', 'Y',
 'Yb', 'Zn', 'Zr']
 
-options = ["CCP4","CCP4F","CNS","SHELX","SOLVE","EPMR","CRANK",
-           "AMORE","SHARP","PHASER","REPLACE"]
+options = ["CCP4", "CCP4F", "CNS", "SHELX", "SOLVE", "EPMR", "CRANK",
+           "AMORE", "PHASER", "REPLACE", "CCP4IF"]
 
 usage   = """
     USAGE : %s FILE OPTIONS [free_hkl_to_inherit] [nSites] [atomType] EXPORT_MODE \n
@@ -268,26 +268,29 @@ P\n%(ident)s.pattZ.ps\nZ\n\n\n
 E\nQ
 """
 
-f2mtz_script = """
+f2mtz_script_pre = """
 TITLE data from XDS
 FILE %(file_name_out)s
 SYMMETRY    %(spgn_in)s
 CELL    %(cell_str)s
-LABOUT  H K L FP%(lbl)s SIGFP%(lbl)s %(cinp_ano)s %(free_lbl)s
-CTYPOUT H H H  F   Q   %(cinp_ano2)s   %(free_code)s
-NAME PROJECT %(ID)s CRYSTAL %(ID)s DATASET d%(ID)s
-END
 """
+f2mtz_script_post = "\nNAME PROJECT %(ID)s CRYSTAL %(ID)s DATASET d%(ID)s\END"
 
-f2mtz_phaser_script = """
-TITLE data from XDS
-FILE %(file_name_out)s
-SYMMETRY    %(spgn_in)s
-CELL    %(cell_str)s
-LABOUT  H K L FP%(lbl)s SIGFP%(lbl)s F(+)%(lbl)s SIGF(+)%(lbl)s F(-)%(lbl)s SIGF(-)%(lbl)s %(free_lbl)s
-CTYPOUT H H H  F   Q    G     L      G     L %(free_code)s
-END
-"""
+f2mtz_script = f2mtz_script_pre + """
+LABOUT  H K L FP%(lbl)s SIGFP%(lbl)s %(cinp_ano)s %(free_lbl)s
+CTYPOUT H H H  F   Q   %(cinp_ano2)s   %(free_code)s"""  + f2mtz_script_post
+
+f2mtz_phaser_script = f2mtz_script_pre + """
+LABOUT  H K L FP%(lbl)s SIGFP%(lbl)s F(+)%(lbl)s -
+              SIGF(+)%(lbl)s F(-)%(lbl)s SIGF(-)%(lbl)s %(free_lbl)s
+CTYPOUT H H H  F  Q  G  L  G  L %(free_code)s""" + f2mtz_script_post
+
+f2mtz_ccp4IF_script = f2mtz_script_pre + """
+LABOUT  H K L IMEAN%(lbl)s SIGIMEAN%(lbl)s -
+        I(+)%(lbl)s SIGI(+)%(lbl)s I(-)%(lbl)s SIGI(-)%(lbl)s -
+        FP%(lbl)s SIGFP%(lbl)s -
+        F(+)%(lbl)s SIGF(+)%(lbl)s F(-)%(lbl)s SIGF(-)%(lbl)s %(free_lbl)s
+CTYPOUT H H H  J Q K M K M F Q G L G L %(free_code)s""" + f2mtz_script_post
 
 scala_script = """#!/bin/bash
 
@@ -328,24 +331,6 @@ eof-2
 
 #run_scala
 run_aimless
-"""
-
-cad_crank_script = """
- cad HKLIN1 temp.mtz HKLOUT output_file_name.mtz<<EOF
- LABIN FILE 1 ALL
- XNAME FILE 1 ALL=XDS
- DWAVELENGTH FILE 1 XDS %(wavelength)s
- END
-"""
-
-f2mtz_sharp_script = """
-TITLE data from XDS
-FILE %(file_name_out)s
-SYMMETRY    %(spgn_in)s
-CELL    %(cell_str)s
-LABOUT  H K L FMID SMID DANO SANO ISYM
-CTYPOUT H H H  F   Q    D     Q   Y
-END
 """
 
 solve_script = """#!/bin/sh
@@ -465,7 +450,7 @@ HKLIn %(last_name)s
 #COMPosition PROTein SEQ PROT.seq NUM 2
 COMPosition BY SOLVent
 COMPosition PERCentage $solvent_content
-CRYStal ${ID} DATAset sad LABIn F+=F(+)${label} SIG+=SIGF(+)${label} F-=F(-)${label} SIG-=SIGF(-)${label}
+CRYStal ${ID} DATAset sad LABIn F+=F(+)${label} SIGF+=SIGF(+)${label} F-=F(-)${label} SIGF-=SIGF(-)${label}
 WAVElength %(wavelength)f
 LLGComplete COMPLETE ON # CLASH 3.8
 ATOM CRYStal ${ID} PDB $hatom_pdb SCATtering ${scat}
@@ -557,7 +542,6 @@ stop
 eof
 
 glrf < RF_SELF_3.inp > RF_SELF.log
-
 """
 
 
@@ -580,6 +564,15 @@ DWAVE FILE 1 %(ID)s d%(ID)s %(wavelength).5f\nEND"""
 cad2_script = """LABIN FILE 1 ALL
 LABIN FILE 2 %(cad_ano)s
 DWAVE FILE 2 %(ID)s d%(ID)s %(wavelength).5f\nEND"""
+
+cad_crank_script = """
+cad HKLIN1 temp.mtz HKLOUT output_file_name.mtz<<EOF
+LABIN FILE 1 ALL
+XNAME FILE 1 ALL=XDS
+DWAVELENGTH FILE 1 XDS %(wavelength)s
+END
+EOF
+"""
 
 mtzutils_script = "END\n"
 
@@ -1000,6 +993,12 @@ class DoMode:
             P.merge_out == "TRUE"
             P.friedel_out = "TRUE"
 
+        elif self.mode == "CCP4IF":
+            self.name_ext = ".mtz"
+            P.mode_out = "CCP4_I+F"
+            P.merge_out == "TRUE"
+            P.friedel_out = "FALSE"
+
         elif self.mode == "CRANK":
             self.name_ext = ".mtz"
             P.mode_out = "CCP4_I"
@@ -1051,21 +1050,13 @@ class DoMode:
             else: P.cinp_ano = P.cinp_ano2 = ""
             P.merge_out = "TRUE"
 
-        elif self.mode == "SHARP":
-            self.name_ext = ".mtz"
-            P.mode_out = "CCP4"
-
-            if P.friedel_out != "FALSE":
-                print "Error, no Anomalous information found from XDS."
-                sys.exit()
-            P.merge_out = "TRUE"
-
         P.ident = ".".join(P.file_name_in.split(".")[:-1])
         #P.file_name_out = P.ident+"_"+P.ha_name+self.name_ext
         #P.file_name_out = P.ident + self.name_ext
         P.file_name_out = P.ID + self.name_ext
         if self.mode == "CCP4" or self.mode == "CCP4F" or \
-           self.mode == "CRANK" or self.mode == "SHARP" or self.mode == "PHASER" :
+          self.mode == "CRANK" or self.mode == "PHASER" or \
+          self.mode == "CCP4IF":
             self.last_name = P.file_name_out
             P.file_name_out = "F2MTZ.HKL.TMP"
             P.last_name = self.last_name
@@ -1088,94 +1079,86 @@ class DoMode:
                 toexec = os.path.join(xupy.XDS_PATH,"xdsconv")
                 xupy.exec_prog(toexec, stdout="xdsconv_dano.log")
 
-
     def post_run(self, P):
-        if self.mode == "SHELX":
+        _d =  P.dir_mode
+        def run_ccp4export(P, f2ms=f2mtz_script, cads=cad_script, N=True):
+            print "CCP4 EXPORT"
+            opWriteCl("%s/f2mtz.inp" % P.dir_mode, f2ms % vars(P))
+            opWriteCl("%s/cad.inp" % P.dir_mode, cads % vars(P))
+            os.system("cd %s;f2mtz hklout TMP.MTZ<f2mtz.inp >f2mtz.log" % _d)
+            if N:
+                os.system("cd %s;cad hklin1 TMP.MTZ hklout %s <cad.inp>cad.log"
+                          % (P.dir_mode, self.last_name))
+                run_ccp4clean(_d)
+        
+        def run_ccp4clean(d):
+            os.system("cd %s;rm -f ../F2MTZ.INP TMP*.MTZ F2MTZ.HKL.TMP*" % d)
+
+        if self.mode == "CCP4":
+           run_ccp4export(P, f2mtz_script, cad_script)
+
+        elif self.mode == "CCP4IF":
+            run_ccp4export(P, f2mtz_ccp4IF_script, cad_script)
+
+        elif self.mode == "CCP4F":
+           run_ccp4export(P, f2mtz_script, cad2_script, N=False)
+           os.system("cd %s;f2mtz hklout TMP2.MTZ<f2mtz.inp2 >f2mtz2.log" % _d)
+           os.system("cd %s;cad hklin1 TMP.MTZ hklin2 TMP2.MTZ hklout %s <cad.inp >cad.log"
+                         % (_d, self.last_name))
+           run_ccp4clean(_d)
+
+        elif self.mode == "SHELX":
             # run xprepx
             P.cns_sg = cns_sg_lib[int(XC.spgn_in)]
-            opWriteCl("%s/xprep.inp" % P.dir_mode, xprep_script % vars(P))
-            opWriteCl("%s/shelxc.inp" % P.dir_mode, shelxc_script % vars(P))
-            opWriteCl("%s/run_shelx.sh" % P.dir_mode, shelxall_script % vars(P))
-            os.system("chmod a+x %s/run_shelx.sh" % P.dir_mode)
-            opWriteCl("%s/run_sitcom.sh" % P.dir_mode, sitcom_script % vars(P))
-            os.system("chmod a+x %s/run_sitcom.sh" % P.dir_mode)
-            #os.system("cd %s;xprep<xprep.inp>xprep.log" % P.dir_mode)
-            os.system("cd %s;shelxc XX1 <shelxc.inp>shelxc.log" % P.dir_mode)
+            opWriteCl("%s/xprep.inp" % _d, xprep_script % vars(P))
+            opWriteCl("%s/shelxc.inp" % _d, shelxc_script % vars(P))
+            opWriteCl("%s/run_shelx.sh" % _d, shelxall_script % vars(P))
+            os.system("chmod a+x %s/run_shelx.sh" % _d)
+            opWriteCl("%s/run_sitcom.sh" % _d, sitcom_script % vars(P))
+            os.system("chmod a+x %s/run_sitcom.sh" % _d)
+            #os.system("cd %s;xprep<xprep.inp>xprep.log" % _d)
+            os.system("cd %s;shelxc XX1 <shelxc.inp>shelxc.log" % _d)
 
         elif self.mode == "CNS":
             #file_name_out = P.dirmode+dirname+".cv"
             P.cns_sg = cns_sg_lib[int(XC.spgn_in)]
             P.cns_cell = 6*"%.2f, " % tuple(P.cell)
-            opWriteCl("%s/cns_xtal.par" % P.dir_mode, cns_par % vars(P))
-
-        elif self.mode == "CCP4":
-            opWriteCl("%s/f2mtz.inp" % P.dir_mode, f2mtz_script % vars(P))
-            opWriteCl("%s/cad.inp" % P.dir_mode, cad_script % vars(P))
-            os.system("cd %s;f2mtz hklout TMP.MTZ<f2mtz.inp >f2mtz.log" % P.dir_mode)
-            os.system("cd %s;cad hklin1 TMP.MTZ hklout %s <cad.inp >cad.log"
-                          % (P.dir_mode, self.last_name))
-            os.system("rm -f F2MTZ.INP ccp4/TMP.MTZ ccp4/F2MTZ.HKL.TMP")
-
-        elif self.mode == "CCP4F":
-           opWriteCl("%s/f2mtz.inp" % P.dir_mode, f2mtz_script % vars(P))
-           opWriteCl("%s/cad.inp" % P.dir_mode, cad2_script % vars(P))
-           os.system("cd %s;f2mtz hklout TMP.MTZ<f2mtz.inp >f2mtz.log" % P.dir_mode)
-           os.system("cd %s;f2mtz hklout TMP2.MTZ<f2mtz.inp2 >f2mtz2.log" % P.dir_mode)
-           os.system("cd %s;cad hklin1 TMP.MTZ hklin2 TMP2.MTZ hklout %s <cad.inp >cad.log"
-                         % (P.dir_mode, self.last_name))
-           os.system("rm -f F2MTZ.INP ccp4f/TMP*.MTZ ccp4f/F2MTZ.HKL.TMP*")
+            opWriteCl("%s/cns_xtal.par" % _d, cns_par % vars(P))
 
         elif self.mode == "CRANK":
-            #opWriteCl("%s/f2mtz.inp" % P.dir_mode, f2mtz_script % vars(P))
+            #opWriteCl("%s/f2mtz.inp" % _d, f2mtz_script % vars(P))
             opWriteCl("cad.inp", cad_crank_script % vars(P))
             os.system("f2mtz HKLOUT temp.mtz< F2MTZ.INP>f2mtz.log")
             os.system("bash cad.inp >cad.log")
             os.system("cd %s; mv ../output_file_name.mtz %s" % \
-                                           (P.dir_mode, self.last_name))
+                                           (_d, self.last_name))
             os.system("rm -f F2MTZ.INP temp.mtz crank/F2MTZ.HKL.TMP")
 
         elif self.mode == "PHASER":
-            opWriteCl("%s/f2mtz.inp" % P.dir_mode, f2mtz_phaser_script % vars(P))
-            opWriteCl("%s/cad.inp" % P.dir_mode, cad_script % vars(P))
-            os.system("cd %s;f2mtz hklout TMP.MTZ<f2mtz.inp >f2mtz.log" % P.dir_mode)
+            opWriteCl("%s/f2mtz.inp" % _d, f2mtz_phaser_script % vars(P))
+            opWriteCl("%s/cad.inp" % _d, cad_script % vars(P))
+            os.system("cd %s;f2mtz hklout TMP.MTZ<f2mtz.inp >f2mtz.log" % _d)
             os.system("cd %s;cad hklin1 TMP.MTZ hklout %s <cad.inp >cad.log"
-                          % (P.dir_mode, self.last_name))
+                          % (_d, self.last_name))
             os.system("rm -f F2MTZ.INP phaser/TMP.MTZ phaser/F2MTZ.HKL.TMP")
-            opWriteCl("%s/run_phaser.sh" % P.dir_mode, phaser_script % vars(P))
-            os.chmod("%s/run_phaser.sh" % P.dir_mode, 0755)
-
-        elif self.mode == "SHARP":
-            opWriteCl("%s/f2mtz.inp" % P.dir_mode, f2mtz_sharp_script % vars(P))
-            opWriteCl("%s/cad.inp" % P.dir_mode, cad_script)
-            os.system("cd %s;f2mtz hklout TMP.MTZ<f2mtz.inp >f2mtz.log" % P.dir_mode)
-            os.system("cd %s;cad hklin1 TMP.MTZ hklout %s <cad.inp >cad.log"
-                          % (P.dir_mode, self.last_name))
-            os.system("rm -f F2MTZ.INP ccp4/TMP.MTZ ccp4/F2MTZ.HKL.TMP")
-
-        #elif self.mode == "CRANK":
-            #opWriteCl("%s/mtzutils.inp" % P.dir_mode, mtzutils_script)
-            #os.system("sed -e  's/J *Q *J *Q$/K M K M/' F2MTZ.INP> F2MTZS.INP")
-            #os.system("f2mtz hklout %s/TMP.MTZ < F2MTZS.INP > %s/f2mtz.log" % \
-                                                        #(P.dir_mode, P.dir_mode))
-            #os.system("cd %s;mtzutils hklin TMP.MTZ hklout %s <mtzutils.inp >mtzutils.log"
-                          #% (P.dir_mode, "crank.mtz"))
-            #os.system("rm -f F2MTZ.INP crank/TMP.MTZ ccp4/F2MTZ.HKL.TMP")
+            opWriteCl("%s/run_phaser.sh" % _d, phaser_script % vars(P))
+            os.chmod("%s/run_phaser.sh" % _d, 0755)
 
         elif self.mode == "SOLVE":
             os.system("grep -v \! %s > solve/%s" % \
                                       (P.file_name_in, P.file_name_out))
             P.spg_name = (xupy.SPGlib[int(P.spgn_in)][0]).lower()
-            opWriteCl("%s/run_solve.sh" % P.dir_mode, solve_script % vars(P))
-            os.chmod("%s/run_solve.sh" % P.dir_mode, 0755)
+            opWriteCl("%s/run_solve.sh" % _d, solve_script % vars(P))
+            os.chmod("%s/run_solve.sh" % _d, 0755)
 
         elif self.mode == "EPMR":
-            opWriteCl("%s/cell" % P.dir_mode, "%(cell_str)s %(spgn_in)s\n" % vars(P))
+            opWriteCl("%s/cell" % _d, "%(cell_str)s %(spgn_in)s\n" % vars(P))
 
         elif self.mode == "REPLACE":
             t = """awk '{gsub(",","");print}' """
             t += """%(dir_mode)s/%(file_name_out)s >> %(dir_mode)s/data.hkl"""
             os.system(t % vars(P))
-            opWriteCl("%s/run_glrf_self.sh" % P.dir_mode, replace_script % vars(P))
+            opWriteCl("%s/run_glrf_self.sh" % _d, replace_script % vars(P))
             os.system("chmod a+x %(dir_mode)s/run_glrf_self.sh" % vars(P))
             os.system("rm -f %(dir_mode)s/%(file_name_out)s" % vars(P))
 
@@ -1189,7 +1172,8 @@ class DoMode:
             os.system("rm -f format.dat %(dir_mode)s/%(file_name_out)s" % vars(P))
             afmt = " * xds *\n%(cell_str)s\n%(symop)s 0\n95. 0.\n15 3.5\n1 1\n"
             P.symop = amore_symops[int(P.spgn_in)][1]
-            opWriteCl("%s/data.d" % P.dir_mode, afmt % vars(P))
+            opWriteCl("%s/data.d" % _d, afmt % vars(P))
+
 
 if __name__ == '__main__':
 
@@ -1210,6 +1194,11 @@ if __name__ == '__main__':
     __force_no_free = False
     __force_output = False
     __label = ""
+    __quiet = False
+
+    def _print(txt):
+        if not __quiet:
+            print txt
 
     argp_fmt = "<<< %-24s %s"
     progname = sys.argv[0].split("/")[-1]
@@ -1219,14 +1208,14 @@ if __name__ == '__main__':
         sys.exit(1)
 
     args = sys.argv[1:]
-    print "\n<== OPTIONS:"
+    #_print("\n XDSCONV EXPORT OPTIONS:")
     for arg in args:
         nonnum = [i for i in arg if i not in "1234567890"]
         if nonnum == []:
             try:
                 n = int(arg)
                 __num_sites = n
-                print argp_fmt % ("nSites:", n)
+                _print(argp_fmt % ("nSites:", n))
             except:
                 pass
         elif arg.count("-l="):
@@ -1246,15 +1235,17 @@ if __name__ == '__main__':
             __force_norm = True
         elif arg == "-u":
             __force_unmerge = True
+        elif arg == "-q":
+            __quiet = True
         elif arg == "-m":
             __force_merge = True
         # Geting output format
         elif arg.upper() in options:
             __format_out.append(arg.upper())
-            print argp_fmt % ("Export mode:", arg.upper())
+            _print(argp_fmt % ("Export mode:", arg.upper()))
         # Geting Atom type
         elif arg.title() in atom_names:
-            print argp_fmt % ("atomType:", arg)
+            _print(argp_fmt % ("atomType:", arg))
             __atom_name = arg.title()
         # Identifying file type
         elif os.path.isfile(arg):
@@ -1280,18 +1271,18 @@ if __name__ == '__main__':
                     __free_refl_input = arg
                     __free_refl_type = "CCP4"
                 else:
-                    print "\nWarning: Can't define the file type",
-                    print "for argument '%s'\n" % arg
+                    _print("\nWarning: Can't define the file type" +
+                           "for argument '%s'\n" % arg)
             except:
                 pass
 
     # If input file for free reflection set is CCP4 it needs to be converted
     # to shelx format for input in xdsconv.
     if __free_refl_input:
-        print argp_fmt % ("free_hkl_to_inherit:", __free_refl_input),
-        print "[%s format]." % ( __free_refl_type)
+        _print(argp_fmt % ("free_hkl_to_inherit:", __free_refl_input) +
+               "[%s format]." % ( __free_refl_type))
         if __free_refl_type == "CCP4":
-            print "   --> Converting CCP4 free reflections to SHELX format."
+            _print("   --> Converting CCP4 free reflections to SHELX format.")
             script = open("mtz2shelx_free.sh", "w")
             script.write(mtz2various_script)
             script.close()
@@ -1300,7 +1291,7 @@ if __name__ == '__main__':
             __free_refl_type = "SHELX"
     #
     if __force_anom and __force_norm:
-        print "Warning: Umbiguous options specification (-a and -n), keeping -a."
+        _print("Warning: Umbiguous options specification (-a and -n), keeping -a.")
         __force_norm == False
 
     # test input file type of inherited reflections
@@ -1373,9 +1364,9 @@ if __name__ == '__main__':
     else:
         XC.wavelength = H["wavelength"]
     if H["friedels_law"] == "TRUE" and XC.friedel_out == "FALSE":
-        print "\n>>> WARNING!  The input file does not contain Friedel's mate."
+        _print("\n>>> WARNING!  The input file does not contain Friedel's mate.")
     if H["merge"] == "TRUE" and XC.merge_out == "FALSE":
-        print "\n>>> WARNING!  The input file does not unmerged reflections."
+        _print("\n>>> WARNING!  The input file does not unmerged reflections.")
 
     if not XC.friedel_out:
         #XC.friedel_out = H["friedels_law"]
@@ -1383,16 +1374,16 @@ if __name__ == '__main__':
     if not XC.merge_out: XC.merge_out = H["merge"]
 
     # Depending on the chosen mode, predefine suffix_name, merge_out, friedel_out...
-    print fmt_inp % vars(XC)
+    _print(fmt_inp % vars(XC))
 
     #-----------------------------
     modes = XC.modes[:]
     for mode in modes:
         XC.mode = mode
         E = DoMode(XC)
-        print fmt_outp % vars(XC)
+        _print(fmt_outp % vars(XC))
         if XC.friedel_in == "FALSE":
-            print fmt_outp_ha % vars(XC)
+            _print(fmt_outp_ha % vars(XC))
         E.run()
         E.post_run(XC)
 
