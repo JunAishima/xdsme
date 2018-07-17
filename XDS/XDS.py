@@ -35,7 +35,7 @@ from xupy import XParam, xdsInp2Param, opWriteCl, \
                  saveLastVersion, LP_names, xdsinp_base, \
                  SPGlib, Lattice, resum_scaling, \
                  get_BravaisToSpgs, get_number_of_processors, \
-                 EXCLUDE_ICE_RING, gxparm2xpar, getProfilRefPar
+                 EXCLUDE_ICE_RING, gxparm2xpar, getProfilRefPar, Bravais_to_Laue
 import XIO
 
 PROGNAME = os.path.split(sys.argv[0])[1]
@@ -1154,8 +1154,10 @@ class XDS:
         "Running the strategy."
         self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = NUMBER_OF_PROCESSORS
         self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = 1
-
-        select_strategy(ridx, self.inpParam)
+        if not self.inpParam["SPACE_GROUP_NUMBER"]:
+            select_strategy(ridx, self.inpParam)
+        else:
+            automatic_strategy(ridx, self.inpParam)
         print "\n Starting strategy calculation."
         self.inpParam["JOB"] = "IDXREF",
         self.run(rsave=True)
@@ -1486,6 +1488,35 @@ def parse_spacegroup(spginp):
     else:
         raise Exception, "\nERROR: Unrecognised space group: %s\n" % spginp
     return spg_int, spg_info, spg_str
+
+# get representative SG for this lattice
+def get_rep_sg_from_real_sg(sgnum):
+    for bravais, infos in Bravais_to_Laue.iteritems():
+        for info in infos:
+            if sgnum in info[3]:
+                return info[1]
+
+def automatic_strategy(idxref_results, xds_par):
+    rep_sg = get_rep_sg_from_real_sg(xds_par['SPACE_GROUP_NUMBER'])
+    possible_lattices = []
+    for res in idxref_results["lattices_table"]:
+        if res.symmetry_num == rep_sg:
+            possible_lattices.append(res)
+    if possible_lattices:
+        if len(possible_lattices) > 2:
+            print 'warning, multiple possible lattices found, first one selected'
+        sel_lat = possible_lattices[0]
+    else: # if nothing matches, use p1
+        sel_lat = idxref_results["lattices_table"][0]
+    sel_spgn = xds_par["SPACE_GROUP_NUMBER"]
+    print "\n Selected  cell paramters:  ", sel_lat
+
+    if sel_spgn > 2:
+        sel_lat.idealize()
+        print " Idealized cell parameters: ", sel_lat.prt()
+        xds_par["UNIT_CELL_CONSTANTS"] = sel_lat.prt()
+    xds_par["SPACE_GROUP_NUMBER"] = sel_spgn
+    return xds_par
 
 def select_strategy(idxref_results, xds_par):
     "Interactive session to select strategy parameters."
