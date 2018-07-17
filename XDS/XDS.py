@@ -1500,11 +1500,12 @@ def automatic_strategy(idxref_results, xds_par):
     rep_sg = get_rep_sg_from_real_sg(xds_par['SPACE_GROUP_NUMBER'])
     possible_lattices = []
     for res in idxref_results["lattices_table"]:
-        if res.symmetry_num == rep_sg:
+        if res.fit <= LATTICE_GEOMETRIC_FIT_CUTOFF and res.symmetry_num == rep_sg:
             possible_lattices.append(res)
     if possible_lattices:
         if len(possible_lattices) > 2:
             print 'warning, multiple possible lattices found, first one selected'
+            # TODO add space group check when multiple lattices found
         sel_lat = possible_lattices[0]
     else: # if nothing matches, use p1
         sel_lat = idxref_results["lattices_table"][0]
