@@ -1507,6 +1507,7 @@ def automatic_strategy(idxref_results, xds_par):
             print 'warning, multiple possible lattices found, first one selected'
             # TODO add space group check when multiple lattices found
         sel_lat = possible_lattices[0]
+        print 'moving forward with representative SG for lattice: SG#:%s %s %s %s %s %s %s' % (sel_lat.symmetry_num, sel_lat.a, sel_lat.b, sel_lat.c, sel_lat.alpha, sel_lat.beta, sel_lat.gamma)
     else: # if nothing matches, use p1
         sel_lat = idxref_results["lattices_table"][0]
     sel_spgn = xds_par["SPACE_GROUP_NUMBER"]
