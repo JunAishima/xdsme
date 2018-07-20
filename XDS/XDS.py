@@ -1489,6 +1489,44 @@ def parse_spacegroup(spginp):
         raise Exception, "\nERROR: Unrecognised space group: %s\n" % spginp
     return spg_int, spg_info, spg_str
 
+def get_lattice_from_uc(uc_input, sg):
+    a = Lattice(map(float, uc_input[0:6]), symmetry=sg)
+    return a
+
+def relsub(latt1, latt2):
+    current_lattice_score = abs(latt1.a - latt2.a) / latt2.a + abs(latt1.b - latt2.b) / latt2.b + \
+                            abs(latt1.c - latt2.c) / latt2.c + abs(latt1.alpha - latt2.alpha) / latt2.alpha + \
+                            abs(latt1.beta - latt2.beta) / latt2.beta + abs(latt1.gamma - latt2.gamma) / latt2.gamma
+    return current_lattice_score
+
+def generate_reordered_lattices(lattice):
+    lattices = [lattice]
+    lattices.append(Lattice((lattice.a, lattice.c, lattice.b, lattice.alpha, lattice.gamma, lattice.beta), symmetry=lattice.symmetry_num))
+    lattices.append(Lattice((lattice.c, lattice.a, lattice.b, lattice.gamma, lattice.alpha, lattice.beta), symmetry=lattice.symmetry_num))
+    lattices.append(Lattice((lattice.c, lattice.b, lattice.a, lattice.gamma, lattice.beta, lattice.alpha), symmetry=lattice.symmetry_num))
+    lattices.append(Lattice((lattice.b, lattice.c, lattice.a, lattice.beta, lattice.gamma, lattice.alpha), symmetry=lattice.symmetry_num))
+    lattices.append(Lattice((lattice.b, lattice.a, lattice.c, lattice.beta, lattice.alpha, lattice.gamma), symmetry=lattice.symmetry_num))
+    return lattices
+
+# desired unit cell is from input
+def get_best_lattice(lattices, desired_unit_cell, symmetry_num):
+    lattice_score = 9999
+    best_lattice = None
+    uc_split = desired_unit_cell.split()
+    desired_single_lattice = get_lattice_from_uc(uc_split, symmetry_num)
+    desired_lattices = generate_reordered_lattices(desired_single_lattice)
+
+    #get best comparison of desired and IDXREF lattices by going through all combinations
+    for lattice in lattices:
+        for desired_lattice in desired_lattices:
+            current_lattice_score = relsub(desired_lattice, lattice)
+            print 'score, desired lattice, current lattice', current_lattice_score, desired_lattice, lattice
+            if current_lattice_score < lattice_score:
+                lattice_score = current_lattice_score
+                best_lattice = lattice
+    print '\nbest lattice has a score of %s' % lattice_score
+    return best_lattice
+
 # get representative SG for this lattice
 def get_rep_sg_from_real_sg(sgnum):
     for bravais, infos in Bravais_to_Laue.iteritems():
@@ -1504,9 +1542,8 @@ def automatic_strategy(idxref_results, xds_par):
             possible_lattices.append(res)
     if possible_lattices:
         if len(possible_lattices) > 2:
-            print 'warning, multiple possible lattices found, first one selected'
-            # TODO add space group check when multiple lattices found
-        sel_lat = possible_lattices[0]
+            print 'warning, multiple possible lattices found'
+        sel_lat = get_best_lattice(possible_lattices, xds_par['UNIT_CELL_CONSTANTS'], xds_par['SPACE_GROUP_NUMBER'])
         print 'moving forward with representative SG for lattice: SG#:%s %s %s %s %s %s %s' % (sel_lat.symmetry_num, sel_lat.a, sel_lat.b, sel_lat.c, sel_lat.alpha, sel_lat.beta, sel_lat.gamma)
     else: # if nothing matches, use p1
         sel_lat = idxref_results["lattices_table"][0]
