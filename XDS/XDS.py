@@ -138,6 +138,12 @@ USAGE = """
     -S, --strategy
          Force to go for calculating strategy (XPLAN) and then stops.
 
+    --highest-symm-strategy
+         Get strategy in highest symmetry spacegroup acceptable to IDXREF
+
+    --p1-strategy
+         Get strategy for P1
+
     -t,  --type
          Force use of type of data - possible types are:
              %s
@@ -1148,16 +1154,16 @@ class XDS:
             print err
             raise Exception(err)
 
-    def run_xplan(self, ridx=None):
+    def run_xplan(self, ridx=None, highest_symm_strategy=False, p1_strategy=False):
         if XDS_INPUT:
             self.inpParam.mix(xdsInp2Param(inp_str=XDS_INPUT))
         "Running the strategy."
         self.inpParam["MAXIMUM_NUMBER_OF_PROCESSORS"] = NUMBER_OF_PROCESSORS
         self.inpParam["MAXIMUM_NUMBER_OF_JOBS"] = 1
-        if not self.inpParam["SPACE_GROUP_NUMBER"]:
+        if not self.inpParam["SPACE_GROUP_NUMBER"] and not highest_symm_strategy and not p1_strategy:
             select_strategy(ridx, self.inpParam)
-        else:
-            automatic_strategy(ridx, self.inpParam)
+        else: # sg set or highest/p1 strategy requested
+            self.inpParam = automatic_strategy(ridx, self.inpParam, highest_symm_strategy, p1_strategy)
         print "\n Starting strategy calculation."
         self.inpParam["JOB"] = "IDXREF",
         self.run(rsave=True)
@@ -1534,20 +1540,37 @@ def get_rep_sg_from_real_sg(sgnum):
             if sgnum in info[3]:
                 return info[1]
 
-def automatic_strategy(idxref_results, xds_par):
-    rep_sg = get_rep_sg_from_real_sg(xds_par['SPACE_GROUP_NUMBER'])
+def automatic_strategy(idxref_results, xds_par, highest_symm_strategy, p1_strategy):
+    rep_sg = 1
     possible_lattices = []
-    for res in idxref_results["lattices_table"]:
-        if res.fit <= LATTICE_GEOMETRIC_FIT_CUTOFF and res.symmetry_num == rep_sg:
-            possible_lattices.append(res)
+    highest_lattice = None
+    if p1_strategy:
+        possible_lattices.append(idxref_results["lattices_table"][0])
+    else:
+        for res in idxref_results["lattices_table"]:
+            if res.fit <= LATTICE_GEOMETRIC_FIT_CUTOFF and res.symmetry_num == rep_sg:
+                possible_lattices.append(res)
+            if res.fit <= LATTICE_GEOMETRIC_FIT_CUTOFF: # used by highest_symm_strategy
+                highest_lattice = res
+        if highest_symm_strategy:
+            possible_lattices = [highest_lattice]
+            print 'possible lattices', possible_lattices
     if possible_lattices:
         if len(possible_lattices) > 2:
             print 'warning, multiple possible lattices found'
-        sel_lat = get_best_lattice(possible_lattices, xds_par['UNIT_CELL_CONSTANTS'], xds_par['SPACE_GROUP_NUMBER'])
+        if highest_symm_strategy or p1_strategy:
+            sel_lat = possible_lattices[0] # highest symmetry, hopefully
+        else: # not highest - also includes P1
+            sel_lat = get_best_lattice(possible_lattices, xds_par['UNIT_CELL_CONSTANTS'], xds_par['SPACE_GROUP_NUMBER'])
         print 'moving forward with representative SG for lattice: SG#:%s %s %s %s %s %s %s' % (sel_lat.symmetry_num, sel_lat.a, sel_lat.b, sel_lat.c, sel_lat.alpha, sel_lat.beta, sel_lat.gamma)
     else: # if nothing matches, use p1
         sel_lat = idxref_results["lattices_table"][0]
-    sel_spgn = xds_par["SPACE_GROUP_NUMBER"]
+    if not highest_symm_strategy or p1_strategy:
+        sel_spgn = xds_par["SPACE_GROUP_NUMBER"] #TODO is it one of the possible space groups?
+    else:
+        sel_spgn = get_BravaisToSpgs()[sel_lat.Bravais_type][0] # use lowest spacegroup number as representative
+    print 'spacegroup selected: ', sel_spgn
+
     print "\n Selected  cell paramters:  ", sel_lat
 
     if sel_spgn > 2:
@@ -1667,6 +1690,8 @@ if __name__ == "__main__":
                 "invert",
                 "spg=",
                 "strategy",
+                "highest-symm-strategy",
+                "p1-strategy",
                 "high-resolution=",
                 "low-resolution=",
                 "last-frame",
@@ -1747,6 +1772,8 @@ if __name__ == "__main__":
     LIBRARY = ""
     XDS_PATH = ""
     FORCE_PROCESSORS_JOBS = False
+    HIGHEST_SYMM_STRATEGY = False
+    P1_STRATEGY = False
 
     for o, a in opts:
         if o == "-v":
@@ -1868,6 +1895,10 @@ if __name__ == "__main__":
             FORCED_NUMBER_OF_JOBS = int(a)
         if o == '--processors':
             FORCED_NUMBER_OF_PROCESSORS = int(a)
+        if o == '--highest-symm-strategy':
+            HIGHEST_SYMM_STRATEGY = True
+        if o == '--p1-strategy':
+            P1_STRATEGY = True
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
@@ -2088,7 +2119,9 @@ if __name__ == "__main__":
         # unitcell from spacegroup.
         #if _spg and not _cell:
         if (len(collect.imageRanges) > 1) or STRATEGY:
-            newrun.run_xplan(ridx=R3)
+            if HIGHEST_SYMM_STRATEGY and P1_STRATEGY:
+                raise Exception('Cannot do both highest symmetry and P1 strategies!')
+            newrun.run_xplan(ridx=R3, highest_symm_strategy=HIGHEST_SYMM_STRATEGY, p1_strategy=P1_STRATEGY)
     if STEP <= 4:
         R4 = newrun.run_integrate(collect.imageRanges)
     if STEP <= 5:
