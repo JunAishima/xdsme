@@ -57,7 +57,7 @@ USAGE = """
          -1: XYCOOR + INIT
          -2: COLSPOT
          -3: IDXREF
-         -4: DEFPIX + INTEGRATE
+         -4: DEFPIX + INTEGRATE (skip defpix with --skip_defpix option)
          -5: CORRECT
 
     -a,  --anomal
