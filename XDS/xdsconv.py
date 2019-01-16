@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.8.11"
+__version__ = "0.8.12"
 __author__ = "Pierre Legrand (pierre.legrand@synchrotron-soleil.fr)"
-__date__ = "03-02-2017"
-__copyright__ = "Copyright (c) 2006-2017 Pierre Legrand"
+__date__ = "06-02-2018"
+__copyright__ = "Copyright (c) 2006-2018 Pierre Legrand"
 __license__ = "New BSD http://www.opensource.org/licenses/bsd-license.php"
 
 # Environemantal variable XDS_PATH, if set, defines the place where the xds
@@ -473,7 +473,6 @@ cparrot \\
 -colin-wrk-fo   "/*/*/[FP${label},SIGFP${label}]" \\
 -colin-wrk-hl   "/*/*/[HLA,HLB,HLC,HLD]" \\
 -colin-wrk-fc   "/*/*/[FWT,PHWT]" \\
--colin-wrk-free "/*/*/[FreeR_flag]" \\
 -mtzout         ${parrID}_parrot_${solvent_content}_${parrot_cycles}.mtz \\
 -colout         parrot \\
 -solvent-flatten \\
@@ -483,7 +482,8 @@ cparrot \\
 -solvent-content ${solvent_content} \\
 -ncs-average \\
 > cparrot_${parrID}_${solvent_content}_${parrot_cycles}.log
-# -ncs-mask-filter-radius 22 \\
+#-ncs-mask-filter-radius 22 \\
+#-colin-wrk-free "/*/*/[FreeR_flag]" \\
 }
 
 run_phaser
@@ -560,7 +560,7 @@ test_set, test_flag = "test", 1
 """
 
 cad_script = """LABIN FILE 1 ALL
-DWAVE FILE 1 %(ID)s d%(ID)s %(wavelength).5f\nEND"""
+DWAVE FILE 1 1 %(wavelength).5f\nEND"""
 cad2_script = """LABIN FILE 1 ALL
 LABIN FILE 2 %(cad_ano)s
 DWAVE FILE 2 %(ID)s d%(ID)s %(wavelength).5f\nEND"""

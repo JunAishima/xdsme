@@ -12,7 +12,7 @@ The XDSME package contains a collection of python scripts made to simplify the p
 
 ## Features
 
-Supported detector image format include: PILATUS, EIGER, ADSC, MARCCD, MAR345, SATURN. There is an experimental support for RAXIS and MAR555 detectors (limited by lack of test images).
+Supported detector image format include: PILATUS, [EIGER](https://github.com/legrandp/xdsme/wiki/Eiger_Dectris_HDF5), ADSC, MARCCD, MAR345, SATURN. There is an experimental support for RAXIS and MAR555 detectors (limited by lack of test images).
 
 xdsme and xds are able to directly process compressed frames in the .gz or .bz2 formats. 
 
@@ -33,6 +33,7 @@ You can either:
 ```bash
  $ cd $HOME/progs 
  $ git clone https://github.com/legrandp/xdsme.git
+ $ cd xdsme ; git submodule init ; git submodule update
  $ export PATH=$PATH:$HOME/progs/xdsme/bin/noarch
 ```
 
@@ -41,7 +42,10 @@ To update xdsme, you will only need to run the following command:
  $ git pull origin
 ```
 
-All scripts are pure python code, so the only dependency is Python version >= 2.2. It should work on any linux or mac-osx directly after unpacking by adding the xdsme/bin/noarch dir to your PATH variable.
+If you have an [external library to read images](https://strucbio.biologie.uni-konstanz.de/xdswiki/index.php/LIB) using the xds plugin mechanism, you can specify its location by setting the [XDS_LIB_HDF5DEC environment variable](https://github.com/legrandp/xdsme/wiki/Eiger_Dectris_HDF5).
+
+All scripts are pure python code, so the only dependency is Python version >= 2.4 (or >= 2.7 for native processing of [HDF5 files](https://github.com/legrandp/xdsme/wiki/Eiger_Dectris_HDF5)). It should work on any linux or mac-osx directly after unpacking by adding the xdsme/bin/noarch dir to your PATH variable.
+
 
 ## Examples
 

@@ -19,7 +19,7 @@ function get_prefix {
    echo ${c%_*.*}
 }
 
-function run_aimless() {
+function run_staraniso() {
 PREFIX=$(get_prefix $1)
 ANOMALOUS=OFF
 prefix=$(basename $1 .HKL)
@@ -32,7 +32,6 @@ aimless hklin ${PREFIX}_pointless.mtz hklout ${PREFIX}_aimless.mtz \
       correlplot AIMLESS.correlplot \
       normplot   AIMLESS.norm \
       anomplot   AIMLESS.anom \
-      xmlout   ${PREFIX}_aimless.xml \
       > ${PREFIX}_aimless.log << eof
 cycles 0
 scales constant    # batch scaling is generally poorer than smoothed
@@ -42,8 +41,11 @@ end
 eof
 
 awk '/SUMMARY_BEGIN/{while(getline && !/SUMMARY_END/){print}}' ${PREFIX}_aimless.log > ${PREFIX}_aimless.SUMM.log
+
+echo | staraniso HKLIN  ${PREFIX}_aimless.mtz HKLOUT  ${PREFIX}_staraniso.mtz >  ${PREFIX}_staraniso.log 
 }
 
 #get_ascii_type $1
 
-run_aimless $HKLIN
+run_staraniso $HKLIN
+
