@@ -212,6 +212,16 @@ USAGE = """
     --skip_defpix
          Skip defpix before integration - useful if xplan already required it to be run
 
+    --minimum_total_spindle_angle
+         Minimum total rotation range to use for XPLAN
+    --maximum_total_spindle_angle
+         Maximum total rotation range to use for XPLAN
+    --increment_total_spindle_angle
+         Increment to use between minimum and maximum total rotation range for XPLAN
+    --minimum_start_spindle_angle
+    --maximum_start_spindle_angle
+    --increment_start_spindle_angle
+
 """ % (PROGNAME, DIRNAME_PREFIX, [filetype for filetype in XIO.FILETYPES])
 
 FMT_HELLO = """
@@ -1173,6 +1183,8 @@ class XDS:
         res = XDSLogParser("IDXREF.LP", run_dir=self.run_dir, verbose=2)
         # Select just the internal circle of the detector.
         self.inpParam["JOB"] = "DEFPIX", "XPLAN"
+        self.inpParam["TOTAL_SPINDLE_ROTATION_RANGES"] = [MINIMUM_TOTAL_SPINDLE_ANGLE, MAXIMUM_TOTAL_SPINDLE_ANGLE, INCREMENT_TOTAL_SPINDLE_ANGLE]
+        self.inpParam["STARTING_ANGLES_OF_SPINDLE_ROTATION"] = [MINIMUM_START_SPINDLE_ANGLE, MAXIMUM_START_SPINDLE_ANGLE, INCREMENT_START_SPINDLE_ANGLE]
         self.run(rsave=True)
         res =  XDSLogParser("XPLAN.LP", run_dir=self.run_dir, verbose=1)
         return res.results
@@ -1723,6 +1735,12 @@ if __name__ == "__main__":
                 "force_processors_jobs",
                 "jobs=", "processors=",
                 "skip_defpix",
+                "minimum_total_spindle_angle=",
+                "maximum_total_spindle_angle=",
+                "increment_total_spindle_angle=",
+                "minimum_start_spindle_angle=",
+                "maximum_start_spindle_angle=",
+                "increment_start_spindle_angle=",
                 "slow", "weak", "brute"]
 
     if len(sys.argv) == 1:
@@ -1780,6 +1798,13 @@ if __name__ == "__main__":
     HIGHEST_SYMM_STRATEGY = False
     P1_STRATEGY = False
     SKIP_DEFPIX = False
+    # values for total and start spindle angles are from xupy
+    MINIMUM_TOTAL_SPINDLE_ANGLE = 15
+    MAXIMUM_TOTAL_SPINDLE_ANGLE = 180
+    INCREMENT_TOTAL_SPINDLE_ANGLE = 15
+    MINIMUM_START_SPINDLE_ANGLE = -95
+    MAXIMUM_START_SPINDLE_ANGLE = 95
+    INCREMENT_START_SPINDLE_ANGLE = 5
 
     for o, a in opts:
         if o == "-v":
@@ -1907,6 +1932,18 @@ if __name__ == "__main__":
             P1_STRATEGY = True
         if o == '--skip_defpix':
             SKIP_DEFPIX = True
+        if o == '--minimum_total_spindle_angle':
+            MINIMUM_TOTAL_SPINDLE_ANGLE = float(a)
+        if o == '--maximum_total_spindle_angle':
+            MAXIMUM_TOTAL_SPINDLE_ANGLE = float(a)
+        if o == '--increment_total_spindle_angle':
+            INCREMENT_TOTAL_SPINDLE_ANGLE = float(a)
+        if o == '--minimum_start_spindle_angle':
+            MINIMUM_START_SPINDLE_ANGLE = float(a)
+        if o == '--maximum_start_spindle_angle':
+            MAXIMUM_START_SPINDLE_ANGLE = float(a)
+        if o == '--increment_start_spindle_angle':
+            INCREMENT_START_SPINDLE_ANGLE = float(a)
         if o in ("-h", "--help"):
             print USAGE
             sys.exit()
