@@ -1183,7 +1183,13 @@ class XDS:
         res = XDSLogParser("IDXREF.LP", run_dir=self.run_dir, verbose=2)
         # Select just the internal circle of the detector.
         self.inpParam["JOB"] = "DEFPIX", "XPLAN"
+        if INCREMENT_TOTAL_SPINDLE_ANGLE <= 0 or INCREMENT_START_SPINDLE_ANGLE <= 0:
+            raise ValueError('increment of total or start spindle angles cannot be 0 or less')
+        if MINIMUM_TOTAL_SPINDLE_ANGLE > MAXIMUM_TOTAL_SPINDLE_ANGLE:
+            raise ValueError('minimum total spindle angle cannot be greater than the maximum')
         self.inpParam["TOTAL_SPINDLE_ROTATION_RANGES"] = [MINIMUM_TOTAL_SPINDLE_ANGLE, MAXIMUM_TOTAL_SPINDLE_ANGLE, INCREMENT_TOTAL_SPINDLE_ANGLE]
+        if MINIMUM_START_SPINDLE_ANGLE > MAXIMUM_START_SPINDLE_ANGLE:
+            raise ValueError('minimum start spindle angle cannot be greater than the maximum')
         self.inpParam["STARTING_ANGLES_OF_SPINDLE_ROTATION"] = [MINIMUM_START_SPINDLE_ANGLE, MAXIMUM_START_SPINDLE_ANGLE, INCREMENT_START_SPINDLE_ANGLE]
         self.run(rsave=True)
         res =  XDSLogParser("XPLAN.LP", run_dir=self.run_dir, verbose=1)
@@ -1978,6 +1984,13 @@ if __name__ == "__main__":
                                     "image", filetype=TYPE)
         #collect.setDirectory(link_dir_name)
         #collect.prefix = prefix
+
+    if INCREMENT_TOTAL_SPINDLE_ANGLE <= 0 or INCREMENT_START_SPINDLE_ANGLE <= 0:
+        raise ValueError('increment of total or start spindle angles cannot be 0 or less')
+    if MINIMUM_TOTAL_SPINDLE_ANGLE > MAXIMUM_TOTAL_SPINDLE_ANGLE:
+        raise ValueError('minimum total spindle angle (%s) cannot be greater than the maximum (%s)' % (MINIMUM_TOTAL_SPINDLE_ANGLE, MAXIMUM_TOTAL_SPINDLE_ANGLE))
+    if MINIMUM_START_SPINDLE_ANGLE > MAXIMUM_START_SPINDLE_ANGLE:
+        raise ValueError('minimum start spindle angle (%s) cannot be greater than the maximum (%s)' % (MINIMUM_START_SPINDLE_ANGLE, MAXIMUM_START_SPINDLE_ANGLE))
 
     try:
         collect = XIO.Collect(inputf, rotationAxis=INVERT)
