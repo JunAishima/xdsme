@@ -1277,10 +1277,10 @@ class XDS:
             self.inpParam["JOB"] = "DEFPIX",
             self.run(rsave=True)
             res = XDSLogParser("DEFPIX.LP", run_dir=self.run_dir, verbose=1)
-        i1, i2 = self.inpParam["DATA_RANGE"]
-        if res.results["mean_background_unmasked"] < 1.:
-            prnt("   -> Setting FIXED_SCALE_FACTOR for INTEGRATE step.")
-            self.inpParam["DATA_RANGE_FIXED_SCALE_FACTOR"] = i1, i2, 1.
+            i1, i2 = self.inpParam["DATA_RANGE"]
+            if res.results["mean_background_unmasked"] < 1.:
+                prnt("   -> Setting FIXED_SCALE_FACTOR for INTEGRATE step.")
+                self.inpParam["DATA_RANGE_FIXED_SCALE_FACTOR"] = i1, i2, 1.
 
         if len(image_ranges) >= 1:
             self.inpParam["JOB"] = "INTEGRATE",
