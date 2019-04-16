@@ -277,7 +277,7 @@ class Image:
             self.type = MAR
             return self.type
 
-        elif "HDF" in self.rawHead[:6] and "Dectris" in self.rawHead:
+        elif "HDF" in self.rawHead[:6]:# and "Dectris" in self.rawHead:
             self.type = HDF5DEC
             return self.type
 
