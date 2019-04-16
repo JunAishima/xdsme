@@ -2097,7 +2097,7 @@ if __name__ == "__main__":
         collect.lookup_imageRanges(forceCheck=False)
 
     except XIO.XIOError, _mess:
-        prnt(_mess, ERROR)
+        prnt(_mess.message, ERROR)
         prnt("Can't access to file(s) %s.\nStop." % inputf, CRITICAL)
 
     imgDir = collect.directory
