@@ -370,9 +370,15 @@ class Image:
             if (self.header["Width"] == 4150 and
                 self.header["Height"] == 4371):
                 self.detModel = "Eiger 16M"
+            elif (self.header["Width"] == 4148 and
+                self.header["Height"] == 4362):
+                self.detModel = "Eiger2 16M"
             elif (self.header["Width"] == 3110 and
                 self.header["Height"] == 3269):
                 self.detModel = "Eiger 9M"
+            elif (self.header["Width"] == 3108 and
+                self.header["Height"] == 3262):
+                self.detModel = "Eiger2 9M"
             elif (self.header["Width"] == 2070 and
                 self.header["Height"] == 2167):
                 self.detModel = "Eiger 4M"
