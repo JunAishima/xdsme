@@ -382,12 +382,21 @@ class Image:
             elif (self.header["Width"] == 2070 and
                 self.header["Height"] == 2167):
                 self.detModel = "Eiger 4M"
+            elif (self.header["Width"] == 2068 and
+                self.header["Height"] == 2162):
+                self.detModel = "Eiger2 4M"
             elif (self.header["Width"] == 1030 and
                 self.header["Height"] == 1065):
                 self.detModel = "Eiger 1M"
+            elif (self.header["Width"] == 1028 and
+                self.header["Height"] == 1062):
+                self.detModel = "Eiger2 1M"
             elif (self.header["Width"] == 1030 and
                 self.header["Height"] == 514):
                 self.detModel = "Eiger 500K"
+            elif (self.header["Width"] == 1028 and
+                self.header["Height"] == 512):
+                self.detModel = "Eiger2 500K"
             else:
                 self.detModel = "Eiger"
         elif self.type == ADSC:
